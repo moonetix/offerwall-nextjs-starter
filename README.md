@@ -2,6 +2,7 @@
 
 **A Next.js App Router starter for the Moonetix offerwall: a signed link, an Earn page, and a postback route that credits each reward exactly once.**
 
+[![CI](https://github.com/moonetix/offerwall-nextjs-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/moonetix/offerwall-nextjs-starter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js 16.4.6](https://img.shields.io/badge/Next.js-16.4.6-black?logo=nextdotjs)](https://moonetix.com/academy/integrations/nextjs-react-offerwall)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://moonetix.com/industries/web-apps)
