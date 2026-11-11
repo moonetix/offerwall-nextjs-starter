@@ -1,0 +1,21 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env files: keep .env.example only
+.env
+.env*.local
+.env.development
+.env.production
+
+# local data from the JSON file store
+/.data/
+
+# logs and OS files
+npm-debug.log*
+.DS_Store
