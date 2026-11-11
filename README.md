@@ -12,7 +12,7 @@
 
 Moonetix is a pay-per-result affiliate network. You add its offerwall to your app, your users earn your own currency (coins, points, gems) by completing offers, and you earn for every completed offer. This starter is a working Next.js App Router project with the whole loop wired up: it signs the offerwall link for the signed-in user, shows the wall, and receives the signed postback that credits or reverses coins.
 
-## Why this starter
+## What you get
 
 1. **Secrets stay on the server.** The link is signed in a `server-only` module, so importing it into a Client Component fails the build instead of leaking your salt.
 2. **No double credits, no lost reversals.** The postback route checks the HMAC in constant time, credits each `transaction_id` once, and a reversal takes back exactly what was credited. Tested with real postbacks from the Moonetix code.
