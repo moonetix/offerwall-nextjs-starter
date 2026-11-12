@@ -11,7 +11,7 @@
 
 > **Get your App ID and keys: sign up free at [https://moonetix.com/register](https://moonetix.com/register)**
 
-Moonetix is a pay-per-result affiliate network. You add its offerwall to your app, your users earn your own currency (coins, points, gems) by completing offers, and you earn for every completed offer. This starter is a working Next.js App Router project with the whole loop wired up: it signs the offerwall link for the signed-in user, shows the wall, and receives the signed postback that credits or reverses coins.
+Moonetix is an affiliate network. You add its offerwall to your app, your users earn your own currency (coins, points, gems) by completing offers, and you earn for every completed offer. This starter is a working Next.js App Router project with the whole loop wired up: it signs the offerwall link for the signed-in user, shows the wall, and receives the signed postback that credits or reverses coins.
 
 ## What you get
 
