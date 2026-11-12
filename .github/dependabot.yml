@@ -6,10 +6,22 @@ updates:
       interval: weekly
     groups:
       next-and-react:
-        patterns: ["next", "react", "react-dom", "@types/react", "@types/react-dom"]
+        patterns:
+          - next
+          - react
+          - react-dom
+          - '@types/react'
+          - '@types/react-dom'
     open-pull-requests-limit: 5
-
+    ignore:
+      - dependency-name: '@types/node'
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
