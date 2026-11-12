@@ -7,9 +7,9 @@
 [![Next.js 16.4.6](https://img.shields.io/badge/Next.js-16.4.6-black?logo=nextdotjs)](https://moonetix.com/academy/integrations/nextjs-react-offerwall)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://moonetix.com/industries/web-apps)
 [![docs: docs.moonetix.com](https://img.shields.io/badge/docs-docs.moonetix.com-004ABB)](https://docs.moonetix.com/offerwall-link)
-[![get keys: moonetix.com](https://img.shields.io/badge/get%20keys-moonetix.com-004ABB)](https://moonetix.com/register)
+[![get keys: moonetix.com](https://img.shields.io/badge/get%20keys-moonetix.com-004ABB)](https://moonetix.com/register?from=github-offerwall-nextjs-starter)
 
-> **Get your App ID and keys: sign up free at [https://moonetix.com/register](https://moonetix.com/register)**
+> **Get your App ID and keys: sign up free at [https://moonetix.com/register](https://moonetix.com/register?from=github-offerwall-nextjs-starter)**
 
 Moonetix is an affiliate network. You add its offerwall to your app, your users earn your own currency (coins, points, gems) by completing offers, and you earn for every completed offer. This starter is a working Next.js App Router project with the whole loop wired up: it signs the offerwall link for the signed-in user, shows the wall, and receives the signed postback that credits or reverses coins.
 
@@ -21,7 +21,7 @@ Moonetix is an affiliate network. You add its offerwall to your app, your users 
 
 ## Quick start
 
-You need Node.js 22.13 or later and a Moonetix app ([sign up](https://moonetix.com/register), then create an offerwall).
+You need Node.js 22.13 or later and a Moonetix app ([sign up](https://moonetix.com/register?from=github-offerwall-nextjs-starter), then create an offerwall).
 
 ```bash
 git clone https://github.com/moonetix/offerwall-nextjs-starter.git
@@ -32,11 +32,16 @@ cp .env.example .env.local
 
 Fill in `.env.local`:
 
-| Variable | Where to find it |
-| --- | --- |
-| `MOONETIX_APP_ID` | Dashboard: Offerwalls, your offerwall, Integration |
-| `MOONETIX_LINK_SALT` | Same place: the link hash salt |
-| `MOONETIX_POSTBACK_KEY` | Postback page under Incentive tools: the postback secret key |
+| Variable | Required | Default | What it does |
+| --- | --- | --- | --- |
+| `MOONETIX_APP_ID` | yes | none | App ID. Dashboard: Offerwalls, your offerwall, Integration. |
+| `MOONETIX_LINK_SALT` | yes | none | Link hash salt, same page. Signs the `user_id` in the wall link. |
+| `MOONETIX_POSTBACK_KEY` | yes | none | Postback secret key, Postback page under Incentive tools. |
+| `MOONETIX_STORE_FILE` | no | `.data/moonetix-store.json` | Where the JSON file store keeps balances in development. |
+| `MOONETIX_FLOATING_BUTTON` | no | `on` | `off` hides the floating "Earn coins" button; `embed.js` still loads for pop-up links. |
+| `MOONETIX_DEMO_USER` | no | unset | `allow` lets the demo user run under `NODE_ENV=production`, for a local `npm start` only. |
+
+The keys are read when a link is built or a postback arrives, so `next build` works without them.
 
 ```bash
 npm run dev
@@ -143,12 +148,30 @@ curl -i "http://localhost:3000/api/moonetix/postback?tx=$TX&user=$U&reward=$R&st
 
 Run it twice: the demo user gains 150 coins once. Change `S=2` to reverse it.
 
+Before you deploy, run [postback-tester](https://github.com/moonetix/postback-tester) against `npm run dev`. It signs postbacks exactly like Moonetix and sends a credit and its retry, three kinds of reversal, four forged or unsigned requests and five parallel copies of one credit, then exits 1 if the route gets any of them wrong. Its transaction IDs start with `test_`, which the route verifies and logs without crediting, so the run checks the signature handling and the answers; `npm test` covers the balances. It reads `MOONETIX_POSTBACK_KEY` from the environment, so export the value from `.env.local` first:
+
+```bash
+npx github:moonetix/postback-tester --preset moonetix \
+  'http://localhost:3000/api/moonetix/postback?tx={transaction_id}&user={user_id}&reward={reward}&status={status}&hash={hash}'
+```
+
 From the Moonetix dashboard, once your route is reachable over the internet (deployed, or through a tunnel):
 
 1. Go to Offerwalls, your offerwall, Integration, and click **Send a test postback**, or use the Postback page.
 2. Send one with status 1 and one with status 2.
 3. Test transaction IDs start with `test_`. The route answers `200` and logs them without crediting.
 4. Every attempt and your server's answer is listed under Reports, Postbacks.
+
+## When something is off
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `/earn` errors with `MOONETIX_APP_ID is not set. Copy .env.example to .env.local and fill it in.` | `.env.local` is missing or the dev server started before you saved it. Fill it in and restart `npm run dev`. |
+| `lib/auth.ts still returns the demo user. Connect your auth library first.` | You ran `npm start` (production) with the placeholder auth. Connect your auth, or set `MOONETIX_DEMO_USER=allow` for a local check. |
+| Postback answers `403`, log shows `moonetix: rejected postback (bad_hash)` | Wrong `MOONETIX_POSTBACK_KEY`, or a proxy rewrote a value. The hash covers `tx:user:reward:status` exactly as received. |
+| Postback answers `403`, log shows `(bad_request)` | A parameter is missing or appears twice. Copy the postback URL above exactly, including `hash={hash}`. |
+| Postback answers `200` but no coins | `test_` transactions and signed postbacks with an unusable user ID or reward are logged and skipped on purpose. Check the log line. |
+| Postback answers `500` or a redirect | The store failed (the JSON file store on a host with a read-only disk), or middleware redirects the route. Use a database store and exclude `/api/moonetix/postback` from auth middleware. |
 
 Free tools that help: the [offerwall link builder](https://moonetix.com/tools/offerwall-link-builder) shows the exact link your server should build for a user ID, and the [postback hash checker](https://moonetix.com/tools/postback-hash-checker) recomputes a postback signature.
 
@@ -159,7 +182,14 @@ Free tools that help: the [offerwall link builder](https://moonetix.com/tools/of
 - [Postback docs](https://docs.moonetix.com/postbacks): macros, statuses, hash, retries.
 - [Credits and reversals](https://docs.moonetix.com/credits-and-reversals) and [Testing](https://docs.moonetix.com/testing).
 - [Moonetix for web apps](https://moonetix.com/industries/web-apps).
-- Sibling repos: [offerwall-postback-handlers](https://github.com/moonetix/offerwall-postback-handlers), [telegram-mini-app-offerwall](https://github.com/moonetix/telegram-mini-app-offerwall), [discord-rewards-bot](https://github.com/moonetix/discord-rewards-bot), [moonetix-offerwall-wordpress](https://github.com/moonetix/moonetix-offerwall-wordpress).
+
+## More Moonetix examples
+
+- **Start here:** [awesome-offerwalls](https://github.com/moonetix/awesome-offerwalls), [offerwall-postback-handlers](https://github.com/moonetix/offerwall-postback-handlers)
+- **Web and backends:** [offerwall-react-vite](https://github.com/moonetix/offerwall-react-vite), [offerwall-vue-nuxt](https://github.com/moonetix/offerwall-vue-nuxt), [offerwall-express](https://github.com/moonetix/offerwall-express), [offerwall-laravel](https://github.com/moonetix/offerwall-laravel), [offerwall-django](https://github.com/moonetix/offerwall-django), [offerwall-firebase-functions](https://github.com/moonetix/offerwall-firebase-functions), [offerwall-supabase](https://github.com/moonetix/offerwall-supabase), [rewards-site-starter](https://github.com/moonetix/rewards-site-starter), [moonetix-offerwall-wordpress](https://github.com/moonetix/moonetix-offerwall-wordpress)
+- **Apps and games:** [offerwall-flutter-example](https://github.com/moonetix/offerwall-flutter-example), [offerwall-react-native-example](https://github.com/moonetix/offerwall-react-native-example), [offerwall-unity-example](https://github.com/moonetix/offerwall-unity-example), [offerwall-godot](https://github.com/moonetix/offerwall-godot), [offerwall-html5-game](https://github.com/moonetix/offerwall-html5-game)
+- **Communities and desktop:** [telegram-mini-app-offerwall](https://github.com/moonetix/telegram-mini-app-offerwall), [discord-rewards-bot](https://github.com/moonetix/discord-rewards-bot), [offerwall-chrome-extension](https://github.com/moonetix/offerwall-chrome-extension)
+- **Tools and data:** [postback-tester](https://github.com/moonetix/postback-tester), [signup-guard](https://github.com/moonetix/signup-guard), [datacenter-ip-ranges](https://github.com/moonetix/datacenter-ip-ranges), [reward-economy-kit](https://github.com/moonetix/reward-economy-kit), [referral-engine](https://github.com/moonetix/referral-engine), [gamification-kit](https://github.com/moonetix/gamification-kit), [offerwall-fraud-playbook](https://github.com/moonetix/offerwall-fraud-playbook), [affiliate-postback-macros](https://github.com/moonetix/affiliate-postback-macros), [country-tiers](https://github.com/moonetix/country-tiers)
 
 ## License
 
@@ -167,4 +197,4 @@ Free tools that help: the [offerwall link builder](https://moonetix.com/tools/of
 
 ---
 
-**Ready to go live? Get your App ID and keys: sign up free at [https://moonetix.com/register](https://moonetix.com/register)**
+**Ready to go live? Get your App ID and keys: sign up free at [https://moonetix.com/register](https://moonetix.com/register?from=github-offerwall-nextjs-starter)**
